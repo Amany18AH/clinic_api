@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.3-fpm
 
 # 1. تثبيت الأدوات الأساسية والملحقات التي يحتاجها لارافل
 RUN apt-get update && apt-get install -y \
