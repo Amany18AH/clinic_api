@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.3-apache
 
 # 1. تثبيت الأدوات الأساسية والملحقات التي يحتاجها لارافل
 RUN apt-get update && apt-get install -y \
@@ -14,6 +14,9 @@ RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
 
 # 2. تحميل أداة Composer داخل السيرفر تلقائياً
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# 🛠️ [إضافة جديدة]: تفعيل صلاحيات السوبر يوزر لـ Composer لتجنب أي توقف في السيرفر السحابي
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # 3. تفعيل مود الـ Rewrite في أباتشي وتوجيهه لمجلد public
 RUN a2enmod rewrite
