@@ -73,7 +73,7 @@ class DoctorController extends Controller
 
         'today_appointments' => Appointment::with('patient')
             ->where('doctor_id', $doctorId)
-            ->whereDate('appointment_date', \Carbon\Carbon\::today())
+            ->whereDate('appointment_date', today())
             ->orderBy('appointment_date')
             ->get()
             ->map(function ($appointment) {
