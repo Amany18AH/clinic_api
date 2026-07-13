@@ -60,7 +60,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? [
-    PDO::MYSQL_ATTR_SSL_CA => base_path('database/cacert.pem'),
+    PDO::MYSQL_ATTR_SSL_CA => __DIR__ . '/../database/cacert.pem',
 ] : [],
              
         ],
