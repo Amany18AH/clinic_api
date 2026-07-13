@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Doctor;
 use App\Models\Appointment;
+use Carbon\Carbon;
 
 class DoctorController extends Controller
 {
@@ -48,7 +49,7 @@ class DoctorController extends Controller
 
 
     $todayAppointments = Appointment::where('doctor_id', $doctorId)
-        ->whereDate('appointment_date', today());
+        ->whereDate('appointment_date', \Carbon\Carbon::today());
 
     return response()->json([
         'doctor' => [
@@ -72,7 +73,7 @@ class DoctorController extends Controller
 
         'today_appointments' => Appointment::with('patient')
             ->where('doctor_id', $doctorId)
-            ->whereDate('appointment_date', today())
+            ->whereDate('appointment_date', \Carbon\Carbon\::today())
             ->orderBy('appointment_date')
             ->get()
             ->map(function ($appointment) {
