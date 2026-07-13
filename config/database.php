@@ -63,7 +63,7 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => '/etc/ssl/certs/ca-certificates.crt',
             ]) : [],
         ],
-
+//
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
