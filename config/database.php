@@ -59,9 +59,9 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? [
-    PDO::MYSQL_ATTR_SSL_CA => __DIR__ . '/../database/cacert.pem',
-] : [],
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+    PDO::MYSQL_ATTR_SSL_CA => database_path('cacert.pem'),
+]) : [],
              
         ],
 //
