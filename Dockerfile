@@ -1,47 +1,25 @@
-FROM php:8.3-apache
+FROM php:8.3-fpm-alpine
 
-# 1. تثبيت الحزم الأساسية وحزم الـ SSL والشهادات (مهمة جداً لـ TiDB)
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    ca-certificates \
-    openssl \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# تثبيت الحزم الأساسية وخادم Nginx والشهادات
+RUN apk add --no-cache nginx supervisor curl libpng-dev libxml2-dev zip unzip git oniguruma-dev ca-certificates openssl
 
-# 2. تثبيت وتفعيل إضافات PHP المطلوبة
+# تثبيت إضافات PHP
 RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
 
-# 3. تثبيت Composer
+# تثبيت Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# 4. تفعيل مود الـ Rewrite في Apache وضبط مجلد الـ Public لـ Laravel
-RUN a2enmod rewrite
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
-
-# 5. تحديد مجلد العمل ونسخ الملفات
 WORKDIR /var/www/html
-COPY . /var/www/html
+COPY . .
 
-# 6. تثبيت حزم لارافل للـ Production
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# تثبيت حزم لارافل للإنتاج وتنظيف الكاش
+RUN composer install --no-interaction --optimize-autoloader --no-dev \
+    && php artisan config:clear || true
 
-# 7. إعطاء الصلاحيات المناسبة لمجلدات الكاش والتخزين
+# ضبط الصلاحيات
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 8. ضبط منفذ Apache ديناميكياً ليتناسب مع متغير PORT الخاص بـ Railway
-# (هذا السطر يمنع الـ 502 نهائياً)
-ENV APACHE_PORT=80
-RUN sed -i 's/Listen 80/Listen ${PORT}/g' /etc/apache2/ports.conf
-RUN sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:${PORT}>/g' /etc/apache2/sites-available/*.conf
-
-# أمر التشغيل الرسمي لـ Apache
-CMD ["apache2-foreground"]
+# إعداد ملف تشغيل Nginx المباشر المتوافق مع Railway PORT
+CMD sh -c "echo 'server { listen '${PORT:-80}'; root /var/www/html/public; index index.php; location / { try_files \$uri \$uri/ /index.php?\$query_string; } location ~ \.php$ { fastcgi_pass 127.0.0.1:9000; fastcgi_index index.php; include fastcgi_params; fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name; } }' > /etc/nginx/http.d/default.conf && php-fpm -D && nginx -g 'daemon off;'
