@@ -39,4 +39,9 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 # 8. ضبط منفذ Apache ديناميكياً ليتناسب مع متغير PORT الخاص بـ Railway
 # (هذا السطر يمنع الـ 502 نهائياً)
-CMD sed -i "s/80/\${PORT}/g" /etc/apache2/sites-available/*.conf /etc/apache2/ports.conf && apache2-foreground
+ENV APACHE_PORT=80
+RUN sed -i 's/Listen 80/Listen ${PORT}/g' /etc/apache2/ports.conf
+RUN sed -i 's/<VirtualHost \*:80>/<VirtualHost \*:${PORT}>/g' /etc/apache2/sites-available/*.conf
+
+# أمر التشغيل الرسمي لـ Apache
+CMD ["apache2-foreground"]
